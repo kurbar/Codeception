@@ -71,7 +71,7 @@ class WebSocket extends Module
 		$this->debugSection('Response', var_export($this->response, true));
 	}
 
-	public function seeResponseContains($key)
+	public function seeCallResultContains($key)
 	{
 		\PHPUnit_Framework_Assert::assertArrayHasKey($key, $this->response);
 	}
