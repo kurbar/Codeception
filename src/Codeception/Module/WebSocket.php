@@ -17,41 +17,63 @@ class WebSocket extends Module
 	 */
 	protected $loop;
 
-	/**
-	 * @var Client
-	 */
-	protected $client;
+	private $host;
 
-	private $response;
+	private $port;
+
+	private $path;
+
+	public $response;
 
 	public function _before(TestCase $test)
 	{
-		if (!$this->config['host'] || !$this->config['port']) {
+		if (!isset($this->config['host']) || !isset($this->config['port'])) {
 			throw new ModuleConfigException(__CLASS__, 'WebSocket server host and port need to be configured');
 		}
 
-		$host = $this->config['host'];
-		$port = $this->config['port'];
+		$this->host = $this->config['host'];
+		$this->port = $this->config['port'];
 
-		$path = $this->config['path'] ?: '/';
+		$this->path = isset($this->config['path']) ? $this->config['path'] : '/';
 
-		$this->loop = LoopFactory::create();
-		$this->client = new Client($this->loop, $host, $port, $path);
+		$this->debugSection('Host', $this->host);
+		$this->debugSection('Port', $this->port);
+		$this->debugSection('Path', $this->path);
 	}
 
 	public function sendWsRequest($action, array $params = array())
 	{
 		$this->response = null;
-		$loop = $this->loop;
 
-		$this->client->setOnWelcomeCallback(function (Client $conn) use (&$response, $loop, $action, $params) {
-			$conn->call($action, array($params), function ($data) use (&$response, $loop, $conn) {
-				$response = $data;
+		$loop = LoopFactory::create();
+		$client = new Client($loop, $this->host, $this->port, $this->path);
+
+		$this->debug("Creating socket connection to host '{$this->host}' port {$this->port}");
+		$self = $this;
+
+		$client->setOnWelcomeCallback(function (Client $conn, $data) use ($self, &$response, $action, $params, $loop) {
+			$self->debug('Connected. Sending ' . $action);
+
+			$conn->call($action, $params, function ($data) use ($self, &$response, $loop) {
+				$self->response = $data;
 				$loop->stop();
 			});
 		});
 
-		$this->debugSection('Response', $response);
+		$loop->addPeriodicTimer(20, function() use ($self, $loop) {
+			$self->debug('20 seconds timeout');
+			$loop->stop();
+			$self->fail('Timeout');
+		});
+
+		$loop->run();
+
+		$this->debugSection('Response', var_export($this->response, true));
+	}
+
+	public function seeResponseContains($key)
+	{
+		\PHPUnit_Framework_Assert::assertArrayHasKey($key, $this->response);
 	}
 
 }
