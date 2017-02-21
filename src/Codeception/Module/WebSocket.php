@@ -71,9 +71,56 @@ class WebSocket extends Module
 		$this->debugSection('Response', var_export($this->response, true));
 	}
 
-	public function seeCallResultContains($key)
+	public function seeCallResultHasStructure(array $schema)
+	{
+		\PHPUnit_Framework_Assert::assertTrue($this->validateArrayStructure($schema, $this->response));
+	}
+
+	public function seeCallResultContainsEntry($key)
 	{
 		\PHPUnit_Framework_Assert::assertArrayHasKey($key, $this->response);
+	}
+
+	public function seeCallResultEntryHasValue($entry, $value)
+	{
+		$parent = $this->response;
+
+		if (strpos($entry, '::') !== false) { // Multi-dimensional look-up
+			$parts = explode('::', $entry);
+			$key = array_pop($parts); // element key
+
+			foreach ($parts as $sKey) {
+				if (array_key_exists($sKey, $parent)) {
+					$parent = $parent[$sKey];
+				} else {
+					break;
+				}
+			}
+		} else {
+			$key = $entry;
+		}
+
+		\PHPUnit_Framework_Assert::assertTrue($parent[$key] === $value);
+	}
+
+	private function validateArrayStructure(array $schema, array $array)
+	{
+		$result = array();
+
+		foreach ($schema as $key => $value) {
+			if (array_key_exists($key, $array)) {
+				if (is_array($value)) {
+					$diff = $this->validateArrayStructure($value, $array[$key]);
+					if (count($diff)) {
+						$result[$key] = $diff;
+					}
+				}
+			} else {
+				$result[$key] = $value;
+			}
+		}
+
+		return count($result) === 0;
 	}
 
 }
