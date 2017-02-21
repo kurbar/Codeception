@@ -105,13 +105,14 @@ class WebSocket extends Module
 
 	private function validateArrayStructure(array $schema, array $array)
 	{
+		$this->debugSection('Validate Array Structure Schema', $schema);
 		$result = array();
 
 		foreach ($schema as $key => $value) {
 			if (array_key_exists($key, $array)) {
 				if (is_array($value)) {
 					$diff = $this->validateArrayStructure($value, $array[$key]);
-					if (count($diff)) {
+					if ($diff === false) {
 						$result[$key] = $diff;
 					}
 				}
