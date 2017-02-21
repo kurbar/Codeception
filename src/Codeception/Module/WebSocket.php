@@ -12,6 +12,8 @@ use React\EventLoop\Factory as LoopFactory;
 class WebSocket extends Module
 {
 
+	const CALL_RESULT = 2;
+
 	/**
 	 * @var LoopFactory
 	 */
@@ -24,6 +26,8 @@ class WebSocket extends Module
 	private $path;
 
 	public $response;
+
+	public $responseType;
 
 	public function _before(TestCase $test)
 	{
@@ -44,6 +48,7 @@ class WebSocket extends Module
 	public function sendWsRequest($action, array $params = array())
 	{
 		$this->response = null;
+		$this->responseType = null;
 
 		$loop = LoopFactory::create();
 		$client = new Client($loop, $this->host, $this->port, $this->path);
@@ -54,8 +59,9 @@ class WebSocket extends Module
 		$client->setOnWelcomeCallback(function (Client $conn, $data) use ($self, &$response, $action, $params, $loop) {
 			$self->debug('Connected. Sending ' . $action);
 
-			$conn->call($action, array($params), function ($data) use ($self, &$response, $loop) {
+			$conn->call($action, array($params), function ($data, $type) use ($self, &$response, $loop) {
 				$self->response = $data;
+				$self->responseType = $type;
 				$loop->stop();
 			});
 		});
@@ -69,6 +75,11 @@ class WebSocket extends Module
 		$loop->run();
 
 		$this->debugSection('Response', var_export($this->response, true));
+	}
+
+	public function seeResponseIsCallResult()
+	{
+		\PHPUnit_Framework_Assert::assertTrue($this->responseType === self::CALL_RESULT);
 	}
 
 	public function seeCallResultHasStructure(array $schema)

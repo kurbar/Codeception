@@ -223,7 +223,7 @@ class WebSocketClient
 						$id = $data[1];
 						if (isset($this->callbacks[$id])) {
 							$callback = $this->callbacks[$id];
-							$callback((isset($data[2]) ? $data[2] : array()));
+							$callback((isset($data[2]) ? $data[2] : array()), $data[0]);
 						}
 					}
 					break;
