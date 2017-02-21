@@ -54,7 +54,7 @@ class WebSocket extends Module
 		$client->setOnWelcomeCallback(function (Client $conn, $data) use ($self, &$response, $action, $params, $loop) {
 			$self->debug('Connected. Sending ' . $action);
 
-			$conn->call($action, $params, function ($data) use ($self, &$response, $loop) {
+			$conn->call($action, array($params), function ($data) use ($self, &$response, $loop) {
 				$self->response = $data;
 				$loop->stop();
 			});
