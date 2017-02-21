@@ -12,7 +12,7 @@ use React\EventLoop\Factory as LoopFactory;
 class WebSocket extends Module
 {
 
-	const CALL_RESULT = 2;
+	const CALL_RESULT = 3;
 
 	/**
 	 * @var LoopFactory
