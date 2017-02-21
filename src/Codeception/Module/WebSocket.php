@@ -105,7 +105,7 @@ class WebSocket extends Module
 
 	private function validateArrayStructure(array $schema, array $array)
 	{
-		$this->debugSection('Validate Array Structure Schema', $schema);
+		$this->debugSection('Validate Array Structure Schema', var_export($schema, true));
 		$result = array();
 
 		foreach ($schema as $key => $value) {
