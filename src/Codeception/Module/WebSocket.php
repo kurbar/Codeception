@@ -19,6 +19,8 @@ class WebSocket extends Module
 
     private $path;
 
+    private $protocol;
+
     public $response;
 
     public $responseType;
@@ -34,6 +36,8 @@ class WebSocket extends Module
 
         $this->path = isset($this->config['path']) ? $this->config['path'] : '/';
 
+        $this->protocol = isset($this->config['protocol']) ? $this->config['protocol'] : 'wamp';
+
         $this->debugSection('Host', $this->host);
         $this->debugSection('Port', $this->port);
         $this->debugSection('Path', $this->path);
@@ -45,7 +49,7 @@ class WebSocket extends Module
         $this->responseType = null;
 
         $loop = LoopFactory::create();
-        $client = new Client($loop, $this->host, $this->port, $this->path);
+        $client = new Client($loop, $this->host, $this->port, $this->path, $this->protocol);
 
         $this->debug(sprintf('Creating socket connection to host %s port %s', $this->host, $this->port));
 

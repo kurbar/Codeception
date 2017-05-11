@@ -62,6 +62,11 @@ class WebSocketClient
     private $socket;
 
     /**
+     * @var string
+     */
+    private $protocol;
+
+    /**
      * @var bool
      */
     private $connected = false;
@@ -77,15 +82,17 @@ class WebSocketClient
      * @param string                   $host
      * @param int                      $port
      * @param string                   $path
+     * @param string                   $protocol
      * @param null|string              $origin
      */
-    function __construct(WebSocketClientInterface $client, StreamSelectLoop $loop, $host = '127.0.0.1', $port = 8080, $path = '/', $origin = null)
+    function __construct(WebSocketClientInterface $client, StreamSelectLoop $loop, $host = '127.0.0.1', $port = 8080, $path = '/', $protocol = 'wamp', $origin = null)
     {
         $this->setLoop($loop);
         $this->setHost($host);
         $this->setPort($port);
         $this->setPath($path);
         $this->setClient($client);
+        $this->setProtocol($protocol);
         $this->setOrigin($origin);
         $this->setKey($this->generateToken(self::TOKEN_LENGHT));
 
@@ -229,8 +236,8 @@ class WebSocketClient
                     break;
                 case self::TYPE_ID_EVENT:
                 case self::TYPE_ID_CALL:
-                    if (isset($data[1]) && isset($data[2])) {
-                        $this->getClient()->onEvent($data[1], $data[2]);
+                    if (isset($data[2]) && isset($data[3])) {
+                        $this->getClient()->onEvent($data[2], $data[3]);
                     }
                     break;
             }
@@ -301,7 +308,7 @@ class WebSocketClient
             "User-Agent: PHPWebSocketClient/" . self::VERSION . "\r\n" .
             "Upgrade: websocket" . "\r\n" .
             "Connection: Upgrade" . "\r\n" .
-            "Sec-WebSocket-Protocol: wamp" . "\r\n" .
+            "Sec-WebSocket-Protocol: {$this->getProtocol()}" . "\r\n" .
             "Sec-WebSocket-Version: 13" . "\r\n" . "\r\n";
     }
 
@@ -509,6 +516,17 @@ class WebSocketClient
     public function getClient()
     {
         return $this->client;
+    }
+
+    public function setProtocol($protocol)
+    {
+        $this->protocol = $protocol;
+        return $this;
+    }
+
+    public function getProtocol()
+    {
+        return $this->protocol;
     }
 
     /**

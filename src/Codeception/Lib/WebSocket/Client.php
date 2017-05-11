@@ -10,6 +10,8 @@ class Client implements WebSocketClientInterface
     private $port;
     /** @var string $path */
     private $path;
+    /** @var string $protocol */
+    private $protocol;
     /** @var WebSocketClient $socket */
     private $socket;
     /** @var WebSocketClient $client */
@@ -26,14 +28,16 @@ class Client implements WebSocketClientInterface
      * @param string          $host
      * @param int             $port
      * @param string          $path
+     * @param string          $protocol
      */
-    function __construct($loop, $host, $port, $path)
+    function __construct($loop, $host, $port, $path, $protocol)
     {
         $this->setHost($host)
             ->setPort($port)
-            ->setPath($path);
+            ->setPath($path)
+            ->setProtocol($protocol);
         $this->setSocket(
-            new WebSocketClient($this, $loop, $this->getHost(), $this->getPort(), $this->getPath())
+            new WebSocketClient($this, $loop, $this->getHost(), $this->getPort(), $this->getPath(), $this->getProtocol())
         );
     }
 
@@ -173,6 +177,17 @@ class Client implements WebSocketClientInterface
     public function getPath()
     {
         return $this->path;
+    }
+
+    public function setProtocol($protocol)
+    {
+        $this->protocol = (string) $protocol;
+        return $this;
+    }
+
+    public function getProtocol()
+    {
+        return $this->protocol;
     }
 
     /**
